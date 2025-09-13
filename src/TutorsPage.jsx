@@ -16,9 +16,62 @@ const TutorsPage = () => {
   const [selectedGender, setSelectedGender] = useState('');
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [filteredTutors, setFilteredTutors] = useState([]);
+  const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for tutors
-  const tutors = [
+  // Fetch tutors from API
+  useEffect(() => {
+    const fetchTutors = async () => {
+      try {
+        console.log('Fetching tutors from API...');
+        const response = await fetch('http://localhost:5001/api/teachers');
+        const data = await response.json();
+        console.log('API Response:', data);
+        
+        // Transform API data to match frontend format
+        const transformedTutors = data.teachers.map(teacher => ({
+          id: teacher.id,
+          name: teacher.full_name,
+          country: teacher.country,
+          flag: getCountryFlag(teacher.country),
+          subject: JSON.parse(teacher.subjects || '[]')[0] || 'General',
+          level: JSON.parse(teacher.education_levels || '[]')[0] || 'All Levels',
+          gender: teacher.gender || 'Not specified',
+          rating: teacher.rating || 0,
+          reviews: teacher.total_reviews || 0,
+          experience: teacher.experience_years ? `${teacher.experience_years} years` : 'Not specified',
+          price: teacher.hourly_rate || 0,
+          image: teacher.profile_image ? `http://localhost:5001${teacher.profile_image}` : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+          specialties: JSON.parse(teacher.subjects || '[]').slice(0, 3),
+          available: teacher.status === 'approved',
+          bio: teacher.bio || 'Experienced teacher'
+        }));
+        
+        console.log('Transformed tutors:', transformedTutors);
+        setTutors(transformedTutors);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching tutors:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchTutors();
+  }, []);
+
+  // Helper function to get country flag
+  const getCountryFlag = (country) => {
+    const flags = {
+      'Kuwait': '🇰🇼',
+      'Egypt': '🇪🇬',
+      'Saudi Arabia': '🇸🇦',
+      'UAE': '🇦🇪'
+    };
+    return flags[country] || '🌍';
+  };
+
+  // Mock data for tutors (fallback)
+  const mockTutors = [
     {
       id: 1,
       name: 'Dr. Ahmed Hassan',
@@ -140,7 +193,7 @@ const TutorsPage = () => {
     });
 
     setFilteredTutors(filtered);
-  }, [searchTerm, selectedLevel, selectedCountry, selectedSubject, selectedGender, priceRange]);
+  }, [tutors, searchTerm, selectedLevel, selectedCountry, selectedSubject, selectedGender, priceRange]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -296,7 +349,16 @@ const TutorsPage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredTutors.map((tutor) => (
+              {loading ? (
+                <div className="col-span-full text-center py-8">
+                  <p>Loading tutors...</p>
+                </div>
+              ) : filteredTutors.length === 0 ? (
+                <div className="col-span-full text-center py-8">
+                  <p>No tutors found matching your criteria.</p>
+                </div>
+              ) : (
+                filteredTutors.map((tutor) => (
                 <Card key={tutor.id} className="card-hover">
                   <CardContent className="p-6">
                     {/* Tutor Image and Status */}
@@ -382,22 +444,9 @@ const TutorsPage = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
-
-            {/* No Results */}
-            {filteredTutors.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground mb-4">
-                  <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium mb-2">No tutors found</h3>
-                  <p>Try adjusting your filters or search terms</p>
-                </div>
-                <Button onClick={clearFilters} variant="outline">
-                  Clear All Filters
-                </Button>
-              </div>
-            )}
           </div>
         </div>
       </div>

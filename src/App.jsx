@@ -10,6 +10,9 @@ import TutorsPage from './TutorsPage'
 import TutorProfile from './TutorProfile'
 import RegistrationPage from './RegistrationPage'
 import AdminManagersPage from './AdminManagersPage'
+import LoginPage from './LoginPage'
+import ResourcesPage from './ResourcesPage'
+import AboutPage from './AboutPage'
 
 function HomePage() {
   return (
@@ -34,6 +37,9 @@ function App() {
             <Route path="/tutor/:id" element={<TutorProfile />} />
             <Route path="/register" element={<RegistrationPage />} />
             <Route path="/admin" element={<AdminManagersPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </main>
         <Footer />
@@ -43,3 +49,5 @@ function App() {
 }
 
 export default App
+
+
