@@ -1,113 +1,66 @@
+import React, { useState, useEffect } from 'react';
 import { Star, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+
 const FeaturedTutors = () => {
-  const tutors = [
-    {
-      id: 1,
-      name: 'Dr. Ahmed Hassan',
-      country: 'Egypt',
-      flag: '🇪🇬',
-      subject: 'Mathematics',
-      level: 'High School',
-      gender: 'Male',
-      rating: 4.9,
-      reviews: 127,
-      experience: '8 years',
-      price: 25,
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      specialties: ['Algebra', 'Calculus', 'Statistics'],
-      available: true,
-      bio: 'Experienced mathematics teacher with PhD in Applied Mathematics.'
-    },
-    {
-      id: 2,
-      name: 'Prof. Fatima Al-Zahra',
-      country: 'Kuwait',
-      flag: '🇰🇼',
-      subject: 'Arabic Literature',
-      level: 'Middle School',
-      gender: 'Female',
-      rating: 4.8,
-      reviews: 89,
-      experience: '12 years',
-      price: 30,
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-      specialties: ['Classical Arabic', 'Poetry', 'Grammar'],
-      available: true,
-      bio: 'Professor of Arabic Literature with extensive experience in classical texts.'
-    },
-    {
-      id: 3,
-      name: 'Dr. Mohammed Al-Rashid',
-      country: 'Saudi Arabia',
-      flag: '🇸🇦',
-      subject: 'Physics',
-      level: 'High School',
-      gender: 'Male',
-      rating: 4.9,
-      reviews: 156,
-      experience: '10 years',
-      price: 35,
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-      specialties: ['Quantum Physics', 'Mechanics', 'Thermodynamics'],
-      available: false,
-      bio: 'Physics researcher and educator specializing in advanced physics concepts.'
-    },
-    {
-      id: 4,
-      name: 'Ms. Aisha Rahman',
-      country: 'UAE',
-      flag: '🇦🇪',
-      subject: 'English',
-      level: 'Elementary',
-      gender: 'Female',
-      rating: 4.7,
-      reviews: 203,
-      experience: '6 years',
-      price: 28,
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      specialties: ['IELTS', 'Business English', 'Literature'],
-      available: true,
-      bio: 'Certified English teacher with expertise in international examinations.'
-    },
-    {
-      id: 5,
-      name: 'Dr. Sarah Al-Mahmoud',
-      country: 'Kuwait',
-      flag: '🇰🇼',
-      subject: 'Chemistry',
-      level: 'High School',
-      gender: 'Female',
-      rating: 4.6,
-      reviews: 94,
-      experience: '7 years',
-      price: 32,
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face',
-      specialties: ['Organic Chemistry', 'Inorganic Chemistry', 'Lab Work'],
-      available: true,
-      bio: 'Chemistry PhD with hands-on laboratory experience and research background.'
-    },
-    {
-      id: 6,
-      name: 'Prof. Omar Hassan',
-      country: 'Egypt',
-      flag: '🇪🇬',
-      subject: 'Biology',
-      level: 'Middle School',
-      gender: 'Male',
-      rating: 4.8,
-      reviews: 112,
-      experience: '9 years',
-      price: 26,
-      image: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face',
-      specialties: ['Cell Biology', 'Genetics', 'Ecology'],
-      available: true,
-      bio: 'Biology professor with research experience in molecular biology and genetics.'
-    }
-  ];
+  const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTutors = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/teachers`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("Featured Tutors API Response:", data);
+        // Assuming the API returns a 'teachers' array directly
+        const transformedTutors = data.teachers.map(tutor => ({
+          id: tutor.id,
+          name: tutor.full_name,
+          country: tutor.country,
+          flag: '🇰🇼', // Placeholder, API doesn't provide flags
+          subject: tutor.subjects ? JSON.parse(tutor.subjects)[0] : 'N/A',
+          level: tutor.education_levels ? JSON.parse(tutor.education_levels)[0] : 'N/A',
+          gender: tutor.gender || 'N/A',
+          rating: tutor.rating,
+          reviews: tutor.total_reviews,
+          experience: `${tutor.experience_years} years`,
+          price: tutor.hourly_rate,
+          image: `${API_BASE_URL}${tutor.profile_image}`,
+          specialties: tutor.subjects ? JSON.parse(tutor.subjects) : [],
+          available: true, // Assuming all featured tutors are available
+          bio: tutor.bio
+        }));
+        setTutors(transformedTutors);
+      } catch (e) {
+        console.error("Error fetching featured tutors:", e);
+        setError("Failed to load featured tutors.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTutors();
+  }, []);
+
+  if (loading) {
+    return <section className="py-12 px-4 text-center">Loading featured tutors...</section>;
+  }
+
+  if (error) {
+    return <section className="py-12 px-4 text-center text-red-500">Error: {error}</section>;
+  }
+
+  if (tutors.length === 0) {
+    return <section className="py-12 px-4 text-center">No featured tutors found.</section>;
+  }
 
   return (
     <section className="py-12 px-4">
